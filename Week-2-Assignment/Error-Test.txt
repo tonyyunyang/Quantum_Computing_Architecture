@@ -1,0 +1,7 @@
+Error Rate      Run1        Run2        Run3        Run4        Run5        Run6        Run7        Run8        Run9        Run10
+Ideal 0         1           1           1           1           1           1           1           1           1           1
+Phy. 0.001      1           1           1           1           1           1           1           1           1           1
+Phy. 0.005      1           1           1           1           1           1           1           1           1           1
+Phy. 0.01       1           1           1           0           0           1           1           1           1           1
+Phy. 0.05       0           0           0           1           1           1           1           0           1           0
+Phy. 0.1        0           1           0           1           1           0           0           0           0           0

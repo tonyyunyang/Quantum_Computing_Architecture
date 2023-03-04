@@ -34,4 +34,4 @@ qubits 9
     Toffoli q[6], q[3], q[0]
     display
 
-error_model depolarizing_channel, 0.001
+error_model depolarizing_channel, 0.1
