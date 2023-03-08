@@ -58,6 +58,9 @@ qubits 14
     CNOT q9, q11
     CNOT q9, q12
 
+.inject_error
+    Z q0
+
 .logical_H
     H q0
     H q1
