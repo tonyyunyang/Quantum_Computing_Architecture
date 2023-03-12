@@ -1,4 +1,4 @@
-Version 1.0
+Version 0.5
 
 qubits 17
 
@@ -25,53 +25,44 @@ qubits 17
     display
 
 .surface_code_cycle
-    H X1
-    H X2
-    H X3
-    H X4
+    {H X1 | H X2 | H X3 | H X4}
 
-    CNOT D1, Z1
-    CNOT X2, D2
-    CNOT D3, Z2
-    CNOT D5, Z3
-    CNOT X3, D6
-    CNOT X4, D8
+    {CNOT D3, Z2 | CNOT X2, D2 | CNOT D1, Z1 | CNOT D5, Z3 | CNOT X3, D6 | CNOT X4, D8}
+    #CNOT D3, Z2
+    #CNOT X2, D2
+    #CNOT D1, Z1
+    #CNOT D5, Z3
+    #CNOT X3, D6
+    #CNOT X4, D8
 
-    CNOT X2, D1
-    CNOT D2, Z2
-    CNOT D4, Z3
-    CNOT X3, D5
-    CNOT D6, Z4
-    CNOT X4, D7
+    {CNOT D2, Z2 | CNOT X2, D1 | CNOT D4, Z3 | CNOT X3, D5 | CNOT D6, Z4 | CNOT X4, D7}
+    #CNOT D2, Z2
+    #CNOT X2, D1
+    #CNOT D4, Z3
+    #CNOT X3, D5
+    #CNOT D6, Z4
+    #CNOT X4, D7
 
-    CNOT X1, D3
-    CNOT D4, Z1
-    CNOT X2, D5
-    CNOT D6, Z2
-    CNOT D8, Z3
-    CNOT X3, D9
+    {CNOT X1, D3 | CNOT D6, Z2 | CNOT X2, D5 | CNOT D4, Z1 | CNOT D8, Z3 | CNOT X3, D9}
+    #CNOT X1, D3
+    #CNOT D6, Z2
+    #CNOT X2, D5
+    #CNOT D4, Z1
+    #CNOT D8, Z3
+    #CNOT X3, D9
 
-    CNOT X1, D2
-    CNOT X2, D4
-    CNOT D5, Z2
-    CNOT D7, Z3
-    CNOT X3, D8
-    CNOT D9, Z4
+    {CNOT X1, D2 | CNOT D5, Z2 | CNOT X2, D4 | CNOT D7, Z3 | CNOT X3, D8 | CNOT D9, Z4}
+    #CNOT X1, D2
+    #CNOT D5, Z2
+    #CNOT X2, D4
+    #CNOT D7, Z3
+    #CNOT X3, D8
+    #CNOT D9, Z4
 
-    H X1
-    H X2
-    H X3
-    H X4
+    {H X1 | H X2 | H X3 | H X4}
     display
 
 .syndromes_code
-    Measure X1
-    Measure X2
-    Measure X3
-    Measure X4
-    Measure Z1
-    Measure Z2
-    Measure Z3
-    Measure Z4
+    {Measure X1 | Measure Z2 | Measure X2 | Measure Z1 | Measure Z3 | Measure X3 | Measure Z4 | Measure X4}
     display
     display_binary
