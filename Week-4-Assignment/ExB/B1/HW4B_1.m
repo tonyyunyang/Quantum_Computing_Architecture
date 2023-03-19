@@ -9,7 +9,7 @@ close all;
 
 % define input signal
 % input amplitude 
-A=[9.48e-3 0 0]; %[V]
+A=[10e-3 10e-3 0]; %[V]
 % input frequency 
 fin=[1 2 3]*1e9; %[Hz]
 
@@ -36,18 +36,18 @@ Vin=A(1)*cos(2*pi*fin(1)*t)+...
     A(3)*cos(2*pi*fin(3)*t); %[V]
 
 G1=200; %[-]
-
-% these are the two values determined from the previous question
-Gtemp1 = 805.8;
-Gtemp2 = 161163;
+Gtemp1 = 94.9;
+Gtemp2 = 18891.25;
 
 Vout1=G1*Vin + Gtemp1 * Vin.^2 + Gtemp2 * Vin.^3;
  
 Vmix=Vout1.*cos(2*pi*t*fosc);
 
 G2=1; %[-]
+Gtemp3 = 402.5;
+Gtemp4 = 0.26;
 
-Vout2=G2*Vmix;
+Vout2=G2*Vmix + Gtemp3 * Vmix.^2 + Gtemp4 * Vmix.^3;
 
 
 %compute fft
