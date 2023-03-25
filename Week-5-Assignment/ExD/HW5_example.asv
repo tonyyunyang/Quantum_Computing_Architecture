@@ -40,37 +40,34 @@ t=dt:dt:T; %[s]
 
 
 % input signal
-in=A(1)*cos(2*pi*fin(1)*t+ph_in(1))+...
-    A(2)*cos(2*pi*fin(2)*t+ph_in(2))+...
-    A(3)*cos(2*pi*fin(2)*t+ph_in(3)); %[V]
+in = A(1)*cos(2*pi*fin(1)*t+ph_in(1)) + ...
+     A(2)*cos(2*pi*fin(2)*t+ph_in(2)) + ...
+     A(3)*cos(2*pi*fin(2)*t+ph_in(3)); %[V]
 
-%sampling the input signal
-in_sampled=in(1:1/(fsample*dt):end);
+% sampling the input signal
+in_sampled = in(1:1/(fsample*dt):end);
 
-%quantize the signal on N-bit
-%first, scale the signal to fit in [0:2^N-1] range, then round it
-Din=round((in_sampled-min(in))/(max(in)-min(in))*(2^N-1));
+% quantize the signal on N-bit
+% first, scale the signal to fit in [0:2^N-1] range, then round it
+Din = round((in_sampled-min(in))/(max(in)-min(in))*(2^N-1));
 
-% Generate random mismatch errors
-num_samples = 2^N-1; % number of DAC levels
-num_averages = 50; % number of times to average the random numbers
-mismatch_variance = 0.1; % variance of the mismatch error
-% generate random numbers with zero mean and unit variance
-rand_numbers_temp = randn(num_samples, num_averages);
-% scale the random numbers to have the desired variance
-rand_numbers = sqrt(mismatch_variance) * rand_numbers_temp;
-% take the mean of the random numbers along the second dimension (averaging dimension)
-average_rand_numbers = mean(rand_numbers, 2).';
+% DAC output range
+DAC_or = 1; %[V]
 
-%DAC output range
-DAC_or=1; %[V]
-%DAC step
-LSB=DAC_or/(2^N-1);
-%define DAC array
-DAC=LSB*[0 ones(1,2^N-1)+average_rand_numbers];
-output_levels=cumsum(DAC);
+% define DAC array with random mismatches
+mismatch_var = 0.00000000001; % set the variance of the mismatch
+mismatch = normrnd(0, mismatch_var, 1, length(Din)); % generate N random mismatches with the given variance
+DAC = (DAC_or/N) * (1 + mismatch); % add the mismatches to the ideal DAC steps
 
-VDAC=output_levels(Din+1);
+% DAC step
+LSB = DAC_or/(2^N-1);
+
+% define DAC array without mismatches
+% DAC = LSB*[0 ones(1,2^N-1)];
+
+output_levels = cumsum(DAC);
+
+VDAC = output_levels(Din+1);
 
 %add S/H
 tmp=ones(1/(fsample*dt),1)*VDAC;

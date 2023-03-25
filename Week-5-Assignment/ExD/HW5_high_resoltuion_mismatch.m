@@ -38,13 +38,14 @@ dt=1e-12; %[s]
 % define time vector
 t=dt:dt:T; %[s]
 
-%define the mismatch
-delta = 0:0.001:10;
-F1 = zeros(length(delta), 0);
-F2 = zeros(length(delta), 0);
-F3 = zeros(length(delta), 0);
+% Define variance of mismatch error
+% var_mismatch = 0:0.0005:0.5;
+var_mismatch = 0:0.00025:0.5;
+F1 = zeros(length(var_mismatch), 0);
+F2 = zeros(length(var_mismatch), 0);
+F3 = zeros(length(var_mismatch), 0);
 
-for i = 1:length(delta)
+for i = 1:length(var_mismatch)
     % input signal
     in=A(1)*cos(2*pi*fin(1)*t+ph_in(1))+...
         A(2)*cos(2*pi*fin(2)*t+ph_in(2))+...
@@ -57,13 +58,23 @@ for i = 1:length(delta)
     %first, scale the signal to fit in [0:2^N-1] range, then round it
     Din=round((in_sampled-min(in))/(max(in)-min(in))*(2^N-1));
     
+    % Generate random mismatch errors
+    num_samples = 2^N-1; % number of DAC levels
+    num_averages = 50; % number of times to average the random numbers
+    %mismatch_variance = 0.1; % variance of the mismatch error
+    % generate random numbers with zero mean and unit variance
+    rand_numbers_temp = randn(num_samples, num_averages);
+    % scale the random numbers to have the desired variance
+    rand_numbers = sqrt(var_mismatch(i)) * rand_numbers_temp;
+    % take the mean of the random numbers along the second dimension (averaging dimension)
+    average_rand_numbers = mean(rand_numbers, 2).';
+    
     %DAC output range
     DAC_or=1; %[V]
     %DAC step
     LSB=DAC_or/(2^N-1);
     %define DAC array
-    %introduce a 10% mismatch
-    DAC = (1 + delta(i)) * LSB * [0 ones(1, 2^N-1)];
+    DAC=LSB*[0 ones(1,2^N-1)+average_rand_numbers];
     output_levels=cumsum(DAC);
     
     VDAC=output_levels(Din+1);
@@ -152,26 +163,23 @@ end
 
 figure
 subplot(3,1,1)
-plot(delta,F1)
-xlabel('Mismatch delta')
+plot(var_mismatch,F1)
+xlabel('Mismatch Varaince')
 ylabel('Q1 Fidelity')
-legend('Q1 VS Mismatch delta')
-xlim([-5 5])
+legend('Q1 VS Mismatch Varaince')
 grid
 
 subplot(3,1,2)
-plot(delta,F2)
-xlabel('Mismatch delta')
+plot(var_mismatch,F2)
+xlabel('Mismatch Varaince')
 ylabel('Q2 Fidelity')
-legend('Q2 VS Mismatch delta')
-xlim([-5 5])
+legend('Q2 VS Mismatch Varaince')
 grid
 
 subplot(3,1,3)
-plot(delta,F3)
+plot(var_mismatch,F3)
 hold off
-xlabel('Mismatch delta')
+xlabel('Mismatch Varaince')
 ylabel('Q3 Fidelity')
-legend('Q3 VS Mismatch delta')
-xlim([-5 5])
+legend('Q3 VS Mismatch Varaince')
 grid
