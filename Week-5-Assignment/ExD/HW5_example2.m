@@ -28,7 +28,7 @@ A=[10e-3 0 0]; %[V]
 % input frequency 
 fin=[1 2 3]*1e9; %[Hz]
 % inout phases
-ph_in=[0 0 0]; %[rad]
+ph_in=[0.31 0 0]; %[rad]
 
 % total simulation time. It is computed as the time needed for a pi
 % rotation for Q1
@@ -40,34 +40,38 @@ t=dt:dt:T; %[s]
 
 
 % input signal
-in = A(1)*cos(2*pi*fin(1)*t+ph_in(1)) + ...
-     A(2)*cos(2*pi*fin(2)*t+ph_in(2)) + ...
-     A(3)*cos(2*pi*fin(2)*t+ph_in(3)); %[V]
+in=A(1)*cos(2*pi*fin(1)*t+ph_in(1))+...
+    A(2)*cos(2*pi*fin(2)*t+ph_in(2))+...
+    A(3)*cos(2*pi*fin(2)*t+ph_in(3)); %[V]
 
-% sampling the input signal
-in_sampled = in(1:1/(fsample*dt):end);
+%sampling the input signal
+in_sampled=in(1:1/(fsample*dt):end);
 
-% quantize the signal on N-bit
-% first, scale the signal to fit in [0:2^N-1] range, then round it
-Din = round((in_sampled-min(in))/(max(in)-min(in))*(2^N-1));
+%quantize the signal on N-bit
+%first, scale the signal to fit in [0:2^N-1] range, then round it
+Din=round((in_sampled-min(in))/(max(in)-min(in))*(2^N-1));
 
-% DAC output range
-DAC_or = 1; %[V]
+%DAC output range
+DAC_or=1; %[V]
+%DAC step
+LSB=DAC_or/(2^N-1);
+%define DAC array
+DAC=LSB*[0 ones(1,2^N-1)];
+output_levels=cumsum(DAC);
 
-% define DAC array with random mismatches
-mismatch_var = 0.00000000001; % set the variance of the mismatch
-mismatch = normrnd(0, mismatch_var, 1, length(Din)); % generate N random mismatches with the given variance
-DAC = (DAC_or/N) * (1 + mismatch); % add the mismatches to the ideal DAC steps
+%define the variance of the mismatch and also calculate the standard
+%deviation
+var_mismatch = 0.01;
+std_mismatch_dev = sqrt(var_mismatch);
 
-% DAC step
-LSB = DAC_or/(2^N-1);
+% generate normally distributed mismatch errors for each element in output_levels
+errors = normrnd(0, std_mismatch_dev, size(output_levels));
 
-% define DAC array without mismatches
-% DAC = LSB*[0 ones(1,2^N-1)];
+% add the errors to output_levels to simulate the mismatch error
+noisy_levels = output_levels + errors;
 
-output_levels = cumsum(DAC);
-
-VDAC = output_levels(Din+1);
+% apply the noisy levels to the input signal
+VDAC = noisy_levels(Din+1);
 
 %add S/H
 tmp=ones(1/(fsample*dt),1)*VDAC;
@@ -80,7 +84,7 @@ xlabel('Time [s]')
 ylabel('Amplitude [-]')
 legend('DAC input','ideal voltage (scaled for comparison)')
 
-G1=4/sinc(fin(1)/fsample); %[-]
+G1=3.75/sinc(fin(1)/fsample); %[-]
 
 Vout1=G1*VoutDAC;
 

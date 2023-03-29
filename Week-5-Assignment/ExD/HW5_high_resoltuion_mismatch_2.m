@@ -15,6 +15,7 @@ fR = [1e6, 1e6, 1e6];
 %define microwave frequency
 fosc=10e9; %[Hz]
 
+
 %number of bits of the DAC
 N=10;
 
@@ -37,46 +38,46 @@ dt=1e-12; %[s]
 % define time vector
 t=dt:dt:T; %[s]
 
-% Define variance of mismatch error
-% var_mismatch = 0:0.0005:0.5;
-var_mismatch = 0:0.00000001:0.000001;
-F1 = zeros(length(var_mismatch), 0);
-F2 = zeros(length(var_mismatch), 0);
-F3 = zeros(length(var_mismatch), 0);
 
-for i = 1:length(var_mismatch)
-    % input signal
-    in=A(1)*cos(2*pi*fin(1)*t+ph_in(1))+...
-        A(2)*cos(2*pi*fin(2)*t+ph_in(2))+...
-        A(3)*cos(2*pi*fin(2)*t+ph_in(3)); %[V]
+% input signal
+in=A(1)*cos(2*pi*fin(1)*t+ph_in(1))+...
+    A(2)*cos(2*pi*fin(2)*t+ph_in(2))+...
+    A(3)*cos(2*pi*fin(2)*t+ph_in(3)); %[V]
+
+%sampling the input signal
+in_sampled=in(1:1/(fsample*dt):end);
+
+%quantize the signal on N-bit
+%first, scale the signal to fit in [0:2^N-1] range, then round it
+Din=round((in_sampled-min(in))/(max(in)-min(in))*(2^N-1));
+
+%DAC output range
+DAC_or=1; %[V]
+%DAC step
+LSB=DAC_or/(2^N-1);
+%define DAC array
+DAC=LSB*[0 ones(1,2^N-1)];
+output_levels=cumsum(DAC);
+
+%define the variance of the mismatch and also calculate the standard
+%deviation
+iter = 200;
+var_mismatch = linspace(0,LSB/125,iter);
+std_mismatch_dev = sqrt(var_mismatch);
+F1 = zeros(iter, 0);
+F2 = zeros(iter, 0);
+F3 = zeros(iter, 0);
+
+for i = 1:iter
+    disp(i)
+    % generate normally distributed mismatch errors for each element in output_levels
+    errors = normrnd(0, std_mismatch_dev(i), size(output_levels));
     
-    %sampling the input signal
-    in_sampled=in(1:1/(fsample*dt):end);
+    % add the errors to output_levels to simulate the mismatch error
+    noisy_levels = output_levels + errors;
     
-    %quantize the signal on N-bit
-    %first, scale the signal to fit in [0:2^N-1] range, then round it
-    Din=round((in_sampled-min(in))/(max(in)-min(in))*(2^N-1));
-    
-    % Generate random mismatch errors
-    num_samples = 2^N-1; % number of DAC levels
-    num_averages = 50; % number of times to average the random numbers
-    %mismatch_variance = 0.1; % variance of the mismatch error
-    % generate random numbers with zero mean and unit variance
-    rand_numbers_temp = randn(num_samples, num_averages);
-    % scale the random numbers to have the desired variance
-    rand_numbers = sqrt(var_mismatch(i)) * rand_numbers_temp;
-    % take the mean of the random numbers along the second dimension (averaging dimension)
-    average_rand_numbers = mean(rand_numbers, 2).';
-    
-    %DAC output range
-    DAC_or=1; %[V]
-    %DAC step
-    LSB=DAC_or/(2^N-1);
-    %define DAC array
-    DAC=LSB*[0 ones(1,2^N-1)+average_rand_numbers];
-    output_levels=cumsum(DAC);
-    
-    VDAC=output_levels(Din+1);
+    % apply the noisy levels to the input signal
+    VDAC = noisy_levels(Din+1);
     
     %add S/H
     tmp=ones(1/(fsample*dt),1)*VDAC;
@@ -155,10 +156,15 @@ for i = 1:length(var_mismatch)
     F2(i)=probabilities(3,end,2);
     F3(i)=probabilities(3,end,3);
     
+    
     % disp(['Fidelity of qubit 1: ' num2str(F1*100) '%']);
     % disp(['Fidelity of qubit 2: ' num2str(F2*100) '%']);
     % disp(['Fidelity of qubit 3: ' num2str(F3*100) '%']);
 end
+
+F1 = movmean(F1, iter/20);
+F2 = movmean(F2, iter/20);
+F3 = movmean(F3, iter/20);
 
 figure
 subplot(3,1,1)
